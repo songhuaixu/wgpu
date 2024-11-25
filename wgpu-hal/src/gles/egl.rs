@@ -600,6 +600,10 @@ impl Inner {
                 wgt::Gles3MinorVersion::Version2 => 2,
             });
         }
+
+        // TODO: ohos 模拟器开启 debug 会 导致 crash 
+        
+        #[cfg(not(target_env = "ohos"))]
         if flags.contains(wgt::InstanceFlags::DEBUG) {
             if version >= (1, 5) {
                 log::debug!("\tEGL context: +debug");
@@ -950,6 +954,8 @@ impl crate::Instance for Instance {
             (Rwh::Xcb(_), _) => {}
             (Rwh::Win32(_), _) => {}
             (Rwh::AppKit(_), _) => {}
+            #[cfg(target_env = "ohos")]
+            (Rwh::OhosNdk(_), _) => {}
             #[cfg(target_os = "android")]
             (Rwh::AndroidNdk(handle), _) => {
                 let format = inner
@@ -1292,6 +1298,9 @@ impl crate::Surface for Surface {
                     }
                     (WindowKind::Unknown, Rwh::AndroidNdk(handle)) => {
                         handle.a_native_window.as_ptr()
+                    }
+                    (WindowKind::Unknown, Rwh::OhosNdk(handle)) => {
+                        handle.native_window.as_ptr()
                     }
                     (WindowKind::Wayland, Rwh::Wayland(handle)) => {
                         let library = &self.wsi.display_owner.as_ref().unwrap().library;
